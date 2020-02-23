@@ -1,160 +1,153 @@
+const Manager = require("./Lib/Manager.js");
+const Engineer = require("./Lib/Engineer.js");
+const Intern = require("./Lib/Intern.js");
+const generateHTML = require("./Templates/generateHTML.js");
+
 const inquirer = require("inquirer");
-const fs = require('fs');
-const Manager = require("./lib/manager");
-const Intern = require("./lib/intern");
-const Engineer = require("./lib/engineer");
+const fs = require("fs");
 const util = require("util");
+const writeFileAsync = util.promisify(fs.writeFile);
+const appendFileAsync = util.promisify(fs.appendFile);
 
-const readFileAsync = util.promisify(fs.readFile);
+// Each team member will be added to this array
+let teamArray = [];
+let teamHTML = "";
 
-const team = [];
+// Runs program
+initProgram();
 
-var roleQuestion = [
-  {
-    type: "list",
-    message: "Who do you want to add?",
-    name: "role",
-    choices: [Manager.ROLE, Engineer.ROLE, Intern.ROLE, "My team is complete!"]
-  }
-];
+async function initProgram() {
+  let newEmployee = "Yes";
+  do {
+    try {
+      let { name } = await nameInput();
+      let { id } = await idInput();
+      let { email } = await emailInput();
+      let { role } = await roleInput();
 
-const fillTemplate = function (templateString, variables) {
-  return new Function("return `" + templateString + "`;").call(variables);
+      let employeeData;
+      if (role === "Manager") {
+        employeeData = await officeNumInput();
+        let manager = new Manager(name, id, email, employeeData.officeNumber);
+        teamArray.push(manager);
+      } else if (role === "Engineer") {
+        employeeData = await githubInput();
+        let engineer = new Engineer(name, id, email, employeeData.username);
+        teamArray.push(engineer);
+      } else if (role === "Intern") {
+        employeeData = await schoolInput();
+        let intern = new Intern(name, id, email, employeeData.school);
+        teamArray.push(intern);
+      }
+      newEmployee = await addEmployee();
+      
+    } catch (err) {
+      console.log(err);
+    }
+  } while (newEmployee.plusEmployee === "Yes");
+
+  iterateTeamArr(teamArray);
+
+  createPage(teamHTML);
 }
 
-function getQuestions(clazz) {
-  return [{
+// Asks for employees first and last name
+function nameInput() {
+  const name = inquirer.prompt({
     type: "input",
-    message: `What´s the ${clazz.ROLE}´s name?`,
-    name: "name"
-  },
-  {
-    type: "number",
-    message: `What´s the ${clazz.ROLE}´s id?`,
+    name: "name",
+    message: "Please add new employees First and Last name."
+  });
+  return name;
+}
+
+// Asks to input the employees ID number
+function idInput() {
+  const id = inquirer.prompt({
+    type: "input",
     name: "id",
-    validate: validateId
-  },
-  {
+    message: "Designate new employees ID number."
+  });
+  return id;
+}
+
+// Asks for the employees email
+function emailInput() {
+  const email = inquirer.prompt({
     type: "input",
-    message: "What´s his/her email address?",
     name: "email",
-    validate : validateEmail
-  },
-  clazz.QUESTION
-  ];
+    message: "What is the new employees email address?"
+  });
+  return email;
 }
 
-function callRoleQuestion() {
-  inquirer.prompt(roleQuestion).then(function (answer) {
-    switch (answer.role) {
-      case Manager.ROLE:
-        callQuestions(Manager.ROLE, getQuestions(Manager));
-        roleQuestion[0].choices.splice(0, 1);
-        break;
-      case Engineer.ROLE:
-        callQuestions(Engineer.ROLE, getQuestions(Engineer));
-        break;
-      case Intern.ROLE:
-        callQuestions(Intern.ROLE, getQuestions(Intern));
-        break;
-      default:
-        createHTML();
-        break;
+// Asks for the role of the employee
+function roleInput() {
+  const role = inquirer.prompt({
+    type: "list",
+    name: "role",
+    message: "What is the employees First and Last name?",
+    choices: ["Manager", "Engineer", "Intern"]
+  });
+  return role;
+}
+
+// Asks for the managers office number
+function officeNumInput() {
+  const officeNumber = inquirer.prompt({
+    type: "input",
+    name: "officeNumber",
+    message: "What is the Manager's office number?"
+  });
+  return officeNumber;
+}
+
+// Asks the engineer for their github username
+function githubInput() {
+  const username = inquirer.prompt({
+    type: "input",
+    name: "username",
+    message: "What is the employees Github Username?"
+  });
+  return username;
+}
+
+// Asks the user what school the intern attends
+function schoolInput() {
+  const school = inquirer.prompt({
+    type: "input",
+    name: "school",
+    message: "What school does the Intern attend?"
+  });
+  return school;
+}
+
+// add another employee prompt
+function addEmployee() {
+  const plusEmployee = inquirer.prompt([
+    {
+      type: "list",
+      name: "plusEmployee",
+      message: "Add another employee?",
+      choices: ["Yes", "No"]
     }
-  }).catch(function (err) {
-    console.log(err);
+  ]);
+  return plusEmployee;
+}
+
+// ForEach loop iterates through team members and adds them to a html card
+function iterateTeamArr(arr) {
+  arr.forEach(function(member) {
+    let employeeCard = generateHTML.dynamicContent(member);
+    teamHTML += employeeCard;
   });
 }
 
-function callQuestions(role, questions) {
-  inquirer.prompt(questions).then(function (answers) {
-    createTeamMember(role, answers);
-    console.log("-----------------------------------");
-    console.log("Member added to the team! And now...");
-    callRoleQuestion();
-  }).catch(function (err) {
-    console.log(err);
-  });
+// Function create team.html file with content of employees
+function createPage(partial) {
+  let createHTML = generateHTML.mainContent(partial);
+
+  writeFileAsync("./output/team.html", createHTML);
+
+  console.log("Successfully created html file");
 }
-
-function createTeamMember(role, ans) {
-  var member = {};
-
-  switch (role) {
-    case Manager.ROLE:
-      member = new Manager(ans.name, ans.id, ans.email, ans.office);
-      break;
-    case Engineer.ROLE:
-      member = new Engineer(ans.name, ans.id, ans.email, ans.github);
-      break;
-    case Intern.ROLE:
-      member = new Intern(ans.name, ans.id, ans.email, ans.school);
-      break;
-  }
-  team.push(member);
-}
-
-function validateId(value) {
-  const exist = team.filter(t => { if (t.id === value) return true });
-
-  if (isNaN(parseInt(value))) {
-    return 'Please enter a number';
-  } else if (exist.length === 0) {
-    return true;
-  } else {
-    return `${value} Please select another ID.`;
-  }
-}
-
-function validateEmail(email) {
-  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-    return (true)
-  }
-  return "You have entered an invalid email address!";
-}
-
-function createHTML() {
-  console.log("-----------------------------------");
-  console.log("Cool! Let's build the profile");
-  readFileAsync("./templates/main.html", "utf8").then(function (data) {
-    writeHTML(addTemplate([Manager, Engineer, Intern], data));
-  });
-}
-
-function addTemplate(classes, data) {
-  classes.forEach((clazz) => {
-    var template = fs.readFileSync(clazz.TEMPLATE, "utf8");
-    const members = filterTeamByRole(clazz.ROLE);
-    var div = '';
-    members.forEach((m) => { div += fillTemplate(template, m) });
-    data = data.replace(clazz.HTML_PLACEHOLDER, div);
-  });
-  return data;
-}
-
-function filterTeamByRole(role) {
-  return team.filter((t) => {
-    if (t.getRole() === role) {
-      return t;
-    }
-  });
-}
-
-function writeHTML(data) {
-
-  fs.writeFile("./output/index.html", data, function (err) {
-    if (err) {
-      return console.log(err);
-    }
-    console.log("-----------------------------------");
-    console.log(`To see it, access: ${__dirname}\\output\\index.html`);
-  });
-}
-
-function init() {
-  console.log("-----------------------------------");
-  console.log("Let's build our team!");
-  callRoleQuestion();
-}
-
-init();
