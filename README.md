@@ -6,13 +6,27 @@ This application allows you to put together a killer team to tackle all of your 
 
 ## Deployment ##
 
-
+https://westonbmeier.github.io/team_generator/
 
 ## Purpose ##
 
 As a manager
 I want to generate a webpage that displays my team's basic info
 so that I have quick access to emails and GitHub profiles
+
+## Set up ##
+
+-Open the terminal.
+
+-npm i 
+
+-node app.js
+
+
+## How it looks ##
+
+![gif](Screenshots/gif.gif)
+![generatedHTML](Screenshots/generatedhtml.png)
 
 
 
