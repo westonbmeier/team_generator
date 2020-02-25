@@ -28,5 +28,9 @@ so that I have quick access to emails and GitHub profiles
 ![gif](Screenshots/gif.gif)
 ![generatedHTML](Screenshots/generatedhtml.png)
 
+## Usage ##
+
+Free to the world 
+
 
 

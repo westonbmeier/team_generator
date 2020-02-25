@@ -1,151 +1,187 @@
+// file requirements
 const Manager = require("./Lib/Manager.js");
 const Engineer = require("./Lib/Engineer.js");
 const Intern = require("./Lib/Intern.js");
 const generateHTML = require("./Templates/generateHTML.js");
-
+// npm requirements //
 const inquirer = require("inquirer");
 const fs = require("fs");
 const util = require("util");
 const writeFileAsync = util.promisify(fs.writeFile);
-const appendFileAsync = util.promisify(fs.appendFile);
 
-// Each team member will be added to this array
-let teamArray = [];
-let teamHTML = "";
+// Team Array 
+let employeeArr = [];
+
+let employeeHTML = "";
 
 // Runs program
-initProgram();
+init();
 
-async function initProgram() {
-  let newEmployee = "Yes";
+async function init() {
+
+  let newTeamMember = "Yes";
+
   do {
     try {
       let { name } = await nameInput();
+
       let { id } = await idInput();
+
       let { email } = await emailInput();
+
       let { role } = await roleInput();
 
-      let employeeData;
+      let empInfo;
+
       if (role === "Manager") {
-        employeeData = await officeNumInput();
-        let manager = new Manager(name, id, email, employeeData.officeNumber);
-        teamArray.push(manager);
+
+        empInfo = await officeNum();
+
+        let manager = new Manager(name, id, email, empInfo.officeNumber);
+
+        employeeArr.push(manager);
+
       } else if (role === "Engineer") {
-        employeeData = await githubInput();
-        let engineer = new Engineer(name, id, email, employeeData.username);
-        teamArray.push(engineer);
+
+        empInfo = await githubInput();
+
+        let engineer = new Engineer(name, id, email, empInfo.username);
+
+        employeeArr.push(engineer);
+        
       } else if (role === "Intern") {
-        employeeData = await schoolInput();
-        let intern = new Intern(name, id, email, employeeData.school);
-        teamArray.push(intern);
+
+        empInfo = await schoolInput();
+
+        let intern = new Intern(name, id, email, empInfo.school);
+
+        employeeArr.push(intern);
       }
-      newEmployee = await addEmployee();
+      newTeamMember = await newEmp();
       
     } catch (err) {
       console.log(err);
     }
-  } while (newEmployee.plusEmployee === "Yes");
+  } while (newTeamMember.addEmployee === "Yes");
 
-  iterateTeamArr(teamArray);
+  genEmployeeArray(employeeArr);
 
-  createPage(teamHTML);
+  generate(employeeHTML);
 }
 
-// Asks for employees first and last name
+// Prompt functions for employee information //
 function nameInput() {
+
   const name = inquirer.prompt({
     type: "input",
     name: "name",
-    message: "Please add new employees First and Last name."
+    message: "Employees First and Last name."
+
   });
   return name;
 }
 
-// Asks to input the employees ID number
+
 function idInput() {
+
   const id = inquirer.prompt({
     type: "input",
     name: "id",
-    message: "Designate new employees ID number."
+    message: "Add new employees ID number."
+
   });
   return id;
 }
 
-// Asks for the employees email
+
 function emailInput() {
+
   const email = inquirer.prompt({
     type: "input",
     name: "email",
-    message: "What is the new employees email address?"
+    message: "New employees email address?"
+
   });
   return email;
 }
 
-// Asks for the role of the employee
+
 function roleInput() {
+
   const role = inquirer.prompt({
     type: "list",
     name: "role",
-    message: "What is the employees First and Last name?",
+    message: "New employees Role?",
     choices: ["Manager", "Engineer", "Intern"]
+
   });
   return role;
 }
 
-// Asks for the managers office number
-function officeNumInput() {
+
+function officeNum() {
+
   const officeNumber = inquirer.prompt({
     type: "input",
     name: "officeNumber",
     message: "What is the Manager's office number?"
+
   });
   return officeNumber;
 }
 
-// Asks the engineer for their github username
+
 function githubInput() {
+
   const username = inquirer.prompt({
     type: "input",
     name: "username",
-    message: "What is the employees Github Username?"
+    message: "Employees Github Username?"
+
   });
   return username;
 }
 
-// Asks the user what school the intern attends
+
 function schoolInput() {
+
   const school = inquirer.prompt({
     type: "input",
     name: "school",
     message: "What school does the Intern attend?"
+
   });
   return school;
 }
 
-// add another employee prompt
-function addEmployee() {
-  const plusEmployee = inquirer.prompt([
+
+function newEmp() {
+
+  const addEmployee = inquirer.prompt([
     {
       type: "list",
-      name: "plusEmployee",
+      name: "addEmployee",
       message: "Add another employee?",
       choices: ["Yes", "No"]
     }
   ]);
-  return plusEmployee;
+  return addEmployee;
 }
 
-// ForEach loop iterates through team members and adds them to a html card
-function iterateTeamArr(arr) {
+function genEmployeeArray(arr) {
+
   arr.forEach(function(member) {
-    let employeeCard = generateHTML.dynamicContent(member);
-    teamHTML += employeeCard;
+
+    let employeeInfoDoc = generateHTML.generatedContent(member);
+
+    employeeHTML += employeeInfoDoc;
   });
 }
 
-// Function create team.html file with content of employees
-function createPage(partial) {
-  let createHTML = generateHTML.mainContent(partial);
+// Function that creates the team.html file using employee info //
+function generate(partial) {
+  
+  let createHTML = generateHTML.content(partial);
 
   writeFileAsync("./output/team.html", createHTML);
 

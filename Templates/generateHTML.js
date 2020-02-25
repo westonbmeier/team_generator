@@ -1,4 +1,4 @@
-function mainContent(partial) {
+function content(partial) {
     return `
     <!doctype html>
       <html lang="en">
@@ -34,19 +34,32 @@ function mainContent(partial) {
   </html>`;
   }
   
-  // Function will return html with employee details
-  function dynamicContent(obj) {
-    let employeeSpecific;
+  // Function to generate employee information //
+  function generatedContent(obj) {
+
+    let employeeInfo;
   
     if (obj.getRole() === "Manager") {
-      employeeSpecific = `Office Number: ${obj.getOfficeNumber()}`;
-    } else if (obj.getRole() === "Engineer") {
-      employeeSpecific = `Github Username: ${obj.getGithub()}`;
-    } else if (obj.getRole() === "Intern") {
-      employeeSpecific = `School: ${obj.getSchool()}`;
-    } else {
+
+      employeeInfo = `Office Number: ${obj.getOfficeNumber()}`;
+
+    }
+    
+    else if (obj.getRole() === "Engineer") {
+
+      employeeInfo = `Github Username: ${obj.getGithub()}`;
+
+    }
+    
+    else if (obj.getRole() === "Intern") {
+
+      employeeInfo = `School: ${obj.getSchool()}`;
+    }
+    
+    else {
       console.log("Choose a valid role");
     }
+
     return `
           <div class="col-sm">
             <div class="card shadow-lg  mb-5  rounded" style="width: 18rem;">
@@ -58,7 +71,7 @@ function mainContent(partial) {
                 <ul class="list-group">
                   <li class="list-group-item">ID: ${obj.getId()}</li>
                   <li class="list-group-item">Email: <a href="#">${obj.getEmail()}</a></li>
-                  <li class="list-group-item">${employeeSpecific}</li>
+                  <li class="list-group-item">${employeeInfo}</li>
                 </ul>
               </div>
             </div>
@@ -66,6 +79,6 @@ function mainContent(partial) {
   }
   
   module.exports = {
-    mainContent: mainContent,
-    dynamicContent: dynamicContent
+    content: content,
+    generatedContent: generatedContent
   };
